@@ -20,6 +20,7 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="MainForm.cs" />
+    <Compile Include="Cp2112RawHid.cs" />
     <None Include="app.manifest" />
   </ItemGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
