@@ -9,7 +9,6 @@ Compression=lzma
 SolidCompression=yes
 UninstallDisplayIcon={app}\BatteryServiceStudio.exe
 PrivilegesRequired=admin
-ArchitecturesAllowed=x86 x64compatible
 
 [Files]
 Source: "publish\*"; DestDir: "{app}"; Flags: recursesubdirs ignoreversion
