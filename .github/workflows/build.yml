@@ -16,10 +16,18 @@ jobs:
         uses: microsoft/setup-msbuild@v2
 
       - name: Restore .NET Framework reference assemblies
-        run: msbuild BatteryServiceStudio.csproj /t:Restore /p:Configuration=Release /p:Platform=AnyCPU
+        run: msbuild BatteryServiceStudio.csproj /t:Restore /p:Configuration=Release /p:Platform=x86
 
       - name: Build application
-        run: msbuild BatteryServiceStudio.csproj /p:Configuration=Release /p:Platform=AnyCPU /m
+        run: msbuild BatteryServiceStudio.csproj /p:Configuration=Release /p:Platform=x86 /m
+
+      - name: Verify executable
+        shell: powershell
+        run: |
+          if (!(Test-Path "bin\Release\BatteryServiceStudio.exe")) {
+            Write-Error "Application executable was not created."
+            exit 1
+          }
 
       - name: Prepare publish directory
         shell: powershell
