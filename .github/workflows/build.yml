@@ -1,4 +1,5 @@
-name: Build Windows Installer
+name: Build Windows 7 Compatible Installer
+
 on:
   workflow_dispatch:
   push:
@@ -11,21 +12,45 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 8.0.x
+      - name: Locate MSBuild
+        uses: microsoft/setup-msbuild@v2
 
-      - name: Publish
-        run: dotnet publish BatteryServiceStudio.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
+      - name: Verify .NET Framework 3.5 reference assemblies
+        shell: powershell
+        run: |
+          $ref = "${env:ProgramFiles(x86)}\Reference Assemblies\Microsoft\Framework\.NETFramework\v3.5"
+          if (!(Test-Path $ref)) {
+            Write-Error "The Windows runner does not contain .NET Framework 3.5 reference assemblies."
+            exit 1
+          }
 
-      - name: Setup Inno Setup
-        uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
-        with:
-          path: installer.iss
+      - name: Build application
+        run: msbuild BatteryServiceStudio.csproj /p:Configuration=Release /p:Platform=AnyCPU /m
+
+      - name: Prepare publish directory
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Force -Path publish | Out-Null
+          Copy-Item "bin\Release\BatteryServiceStudio.exe" "publish\BatteryServiceStudio.exe"
+          Copy-Item "app.manifest" "publish\app.manifest"
+
+      - name: Download legacy Inno Setup 5.6.1 Unicode
+        shell: powershell
+        run: |
+          Invoke-WebRequest "https://files.jrsoftware.org/is/5/innosetup-5.6.1-unicode.exe" -OutFile "${env:RUNNER_TEMP}\innosetup.exe"
+          Start-Process "${env:RUNNER_TEMP}\innosetup.exe" -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/NORESTART" -Wait
+
+      - name: Build installer
+        shell: powershell
+        run: |
+          & "${env:ProgramFiles(x86)}\Inno Setup 5\ISCC.exe" "installer.iss"
+          if (!(Test-Path "installer\BatteryServiceStudio_Setup_Win7.exe")) {
+            Write-Error "Installer was not created."
+            exit 1
+          }
 
       - name: Upload installer
         uses: actions/upload-artifact@v4
         with:
-          name: BatteryServiceStudio-Windows-Installer
-          path: installer/BatteryServiceStudio_Setup.exe
+          name: BatteryServiceStudio-Windows7-Installer
+          path: installer/BatteryServiceStudio_Setup_Win7.exe
