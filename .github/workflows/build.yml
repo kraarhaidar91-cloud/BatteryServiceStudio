@@ -15,14 +15,8 @@ jobs:
       - name: Locate MSBuild
         uses: microsoft/setup-msbuild@v2
 
-      - name: Verify .NET Framework 3.5 reference assemblies
-        shell: powershell
-        run: |
-          $ref = "${env:ProgramFiles(x86)}\Reference Assemblies\Microsoft\Framework\.NETFramework\v3.5"
-          if (!(Test-Path $ref)) {
-            Write-Error "The Windows runner does not contain .NET Framework 3.5 reference assemblies."
-            exit 1
-          }
+      - name: Restore .NET Framework reference assemblies
+        run: msbuild BatteryServiceStudio.csproj /t:Restore /p:Configuration=Release /p:Platform=AnyCPU
 
       - name: Build application
         run: msbuild BatteryServiceStudio.csproj /p:Configuration=Release /p:Platform=AnyCPU /m
